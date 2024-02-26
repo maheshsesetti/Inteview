@@ -12,15 +12,15 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
-import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/data/latest_all.dart' as ltz;
 import 'package:timezone/timezone.dart' as tz;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    if (kIsWeb || Platform.isLinux) {
+  if (kIsWeb || Platform.isLinux) {
     return;
   }
-  tz.initializeTimeZones();
+  ltz.initializeTimeZones();
   final String timeZoneName = await FlutterTimezone.getLocalTimezone();
   tz.setLocalLocation(tz.getLocation(timeZoneName));
   Hive.registerAdapter(UserAdapter());
@@ -56,8 +56,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late DateTime scheduledTime;
-  FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
+  var scheduledTime;
+  // FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
+  static final FlutterLocalNotificationsPlugin
+      flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   Dio dio = Dio();
 
   Future callApi() async {
@@ -66,9 +68,9 @@ class _MyHomePageState extends State<MyHomePage> {
       final response = await dio.get(url);
       final box = await Hive.openBox<List<User>>('userBox');
       List<User> getData = [];
-      getData.addAll(List<User>.from(json.decode(response.data).map((x) => User.fromJson(x))));
+      getData.addAll(List<User>.from(
+          json.decode(response.data).map((x) => User.fromJson(x))));
       box.put('userBox', getData);
-
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -82,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     initLocalNotification();
     callApi();
-    
+
     super.initState();
   }
 
@@ -93,9 +95,26 @@ class _MyHomePageState extends State<MyHomePage> {
     var iOSinitilize = const DarwinInitializationSettings();
     var initilizationsSettings =
         InitializationSettings(android: androidInitilize, iOS: iOSinitilize);
-    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    await flutterLocalNotificationsPlugin!.initialize(initilizationsSettings,
+    await flutterLocalNotificationsPlugin.initialize(initilizationsSettings,
         onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
+  }
+
+  ShowNotification() async {
+    const AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
+      'your channel id',
+      'your channel name',
+      channelDescription: 'your channel description',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+    );
+
+    const NotificationDetails notificationDetails =
+        NotificationDetails(android: androidNotificationDetails);
+    await flutterLocalNotificationsPlugin!.show(
+        0, 'plain title', 'plain body', notificationDetails,
+        payload: 'item x');
   }
 
   void onDidReceiveNotificationResponse(
@@ -108,25 +127,27 @@ class _MyHomePageState extends State<MyHomePage> {
         context, MaterialPageRoute<void>(builder: (context) => const MyApp()));
   }
 
-  Future<void> notificationShedule(DateTime time) async {
-        final currentTimeZone = tz.getLocation('Asia/Kolkata'); // India timezone
-  print('Current Timezone: ${currentTimeZone.name}');
+ 
+ 
 
-    print(tz.TZDateTime.now(currentTimeZone).add(const Duration(seconds: 30)));
-    await flutterLocalNotificationsPlugin!.zonedSchedule(
+  notificationShedule(DateTime time) async {
+    tz.TZDateTime scheduledTime= tz.TZDateTime.from(time, tz.local);
+    await flutterLocalNotificationsPlugin.zonedSchedule(
         0,
         'Alarm',
         'Alarm name',
-        tz.TZDateTime.now(currentTimeZone).add(const Duration(seconds: 30)),
+        // tz.TZDateTime.from(time, tz.local),
+        scheduledTime,
         const NotificationDetails(
-            android: AndroidNotificationDetails('Alarm', 'Alarm name',
+            android: AndroidNotificationDetails('Alarm_sch', 'Alarm sch name',
                 channelDescription:
                     'Flutter local notification package example',
-                autoCancel: false,
-                playSound: true,
-                priority: Priority.max)),
+                importance: Importance.max,
+                priority: Priority.high,
+                ticker: 'ticker')),
         androidScheduleMode: AndroidScheduleMode.alarmClock,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime);
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime);
   }
 
   @override
@@ -145,6 +166,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ElevatedButton(
                 onPressed: () async {
+                   
+                  
                   final TimeOfDay? pickedTime = await showTimePicker(
                     context: context,
                     initialTime: TimeOfDay.now(),
@@ -160,7 +183,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       pickedTime.minute,
                     );
 
-                    await notificationShedule(scheduledTime);
+                  notificationShedule(scheduledTime);
+
                   }
                 },
                 child: const Text("Set Alarm"))
