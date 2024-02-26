@@ -24,10 +24,11 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.example.flutter_interview"
-    compileSdkVersion 34
+    compileSdkVersion 33
     ndkVersion flutter.ndkVersion
 
     compileOptions {
+        
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -64,4 +65,5 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+}

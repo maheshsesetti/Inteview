@@ -58,8 +58,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   var scheduledTime;
   // FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
-  static final FlutterLocalNotificationsPlugin
-      flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   Dio dio = Dio();
 
   Future callApi() async {
@@ -99,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
   }
 
-  ShowNotification() async {
+  showNotification() async {
     const AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
       'your channel id',
@@ -112,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     const NotificationDetails notificationDetails =
         NotificationDetails(android: androidNotificationDetails);
-    await flutterLocalNotificationsPlugin!.show(
+    await flutterLocalNotificationsPlugin.show(
         0, 'plain title', 'plain body', notificationDetails,
         payload: 'item x');
   }
@@ -127,27 +127,22 @@ class _MyHomePageState extends State<MyHomePage> {
         context, MaterialPageRoute<void>(builder: (context) => const MyApp()));
   }
 
- 
- 
-
   notificationShedule(DateTime time) async {
-    tz.TZDateTime scheduledTime= tz.TZDateTime.from(time, tz.local);
+   
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
-        0,
-        'Alarm',
-        'Alarm name',
-        // tz.TZDateTime.from(time, tz.local),
-        scheduledTime,
-        const NotificationDetails(
-            android: AndroidNotificationDetails('Alarm_sch', 'Alarm sch name',
-                channelDescription:
-                    'Flutter local notification package example',
-                importance: Importance.max,
-                priority: Priority.high,
-                ticker: 'ticker')),
-        androidScheduleMode: AndroidScheduleMode.alarmClock,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime);
+    0,
+    'scheduled title',
+    'scheduled body',
+    tz.TZDateTime.from(time, tz.local),
+    const NotificationDetails(
+        android: AndroidNotificationDetails(
+            'your channel id', 'your channel name',
+            channelDescription: 'your channel description')),
+    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime);
+    
   }
 
   @override
@@ -166,8 +161,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ElevatedButton(
                 onPressed: () async {
-                   
-                  
                   final TimeOfDay? pickedTime = await showTimePicker(
                     context: context,
                     initialTime: TimeOfDay.now(),
@@ -183,8 +176,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       pickedTime.minute,
                     );
 
-                  notificationShedule(scheduledTime);
-
+                    notificationShedule(scheduledTime);
                   }
                 },
                 child: const Text("Set Alarm"))
