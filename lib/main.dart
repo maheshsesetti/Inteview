@@ -56,10 +56,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var scheduledTime;
-  // FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
   static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
   Dio dio = Dio();
 
   Future callApi() async {
@@ -89,7 +88,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future initLocalNotification() async {
-    const ios = DarwinInitializationSettings();
+    flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()!
+        .requestExactAlarmsPermission();
+            flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()!
+        .requestNotificationsPermission();
     var androidInitilize =
         const AndroidInitializationSettings('@drawable/ic_launcher');
     var iOSinitilize = const DarwinInitializationSettings();
@@ -128,21 +134,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   notificationShedule(DateTime time) async {
-   
-
     await flutterLocalNotificationsPlugin.zonedSchedule(
-    0,
-    'scheduled title',
-    'scheduled body',
-    tz.TZDateTime.from(time, tz.local),
-    const NotificationDetails(
-        android: AndroidNotificationDetails(
-            'your channel id', 'your channel name',
-            channelDescription: 'your channel description')),
-    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime);
-    
+        0,
+        'scheduled title',
+        'scheduled body',
+        tz.TZDateTime.from(time, tz.local),
+        const NotificationDetails(
+            android: AndroidNotificationDetails(
+                'your channel id', 'your channel name',
+                channelDescription: 'your channel description')),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime);
   }
 
   @override
@@ -168,7 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   if (pickedTime != null) {
                     // Create a DateTime object from the picked time
                     final now = DateTime.now();
-                    scheduledTime = DateTime(
+                    final scheduledTime = DateTime(
                       now.year,
                       now.month,
                       now.day,
